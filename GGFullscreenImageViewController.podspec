@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
   }
   s.source = {
     :git => 'https://github.com/bONchON/GGFullscreenImageViewController.git',
-    :tag => 'v1.0.0'
+    :tag => 'v1.0.0-whistle1'
   }
   s.source_files = 'GGFullscreenImageViewController/GGFullscreenImageViewController.{h,m}'
   s.requires_arc = true
