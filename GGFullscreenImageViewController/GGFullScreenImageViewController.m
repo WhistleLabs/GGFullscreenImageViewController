@@ -9,7 +9,7 @@
 #import "GGFullscreenImageViewController.h"
 #import <QuartzCore/QuartzCore.h>
 
-static const double kAnimationDuration = 0.3;
+static const double kAnimationDuration = 0.2;
 
 static inline GGOrientation convertOrientation(UIInterfaceOrientation orientation) {
     switch (orientation) {
@@ -128,11 +128,18 @@ static inline NSInteger RadianDifference(UIInterfaceOrientation from, UIInterfac
     UIView *window = [app keyWindow];
     [app setStatusBarHidden:YES withAnimation:UIStatusBarAnimationFade];
     
-    CGRect endFrame = [self.containerView convertRect:self.containerView.bounds toView:window];
+    CGRect maxFrame = [self.containerView convertRect:self.containerView.bounds toView:window];
+    
+    CGSize imageSize = self.imageView.image.size;
+    CGFloat ratio = imageSize.height / imageSize.width;
+    CGFloat height = ratio * maxFrame.size.width;
+    
+    CGRect endFrame = CGRectMake(0, (maxFrame.size.height / 2) - (height / 2), maxFrame.size.width, height);
 
     CABasicAnimation *center = [CABasicAnimation animationWithKeyPath:@"position"];
     center.fromValue = [NSValue valueWithCGPoint:self.imageView.layer.position];
-    center.toValue = [NSValue valueWithCGPoint:CGPointMake(floorf(endFrame.size.width/2),floorf(endFrame.size.height/2))];
+    center.toValue = [NSValue valueWithCGPoint:CGPointMake(floorf(endFrame.size.width / 2),
+                                                           floorf(endFrame.origin.y + endFrame.size.height/2))];
     
     CABasicAnimation *scale = [CABasicAnimation animationWithKeyPath:@"bounds"];
     scale.fromValue = [NSValue valueWithCGRect:self.imageView.layer.bounds];
@@ -144,9 +151,9 @@ static inline NSInteger RadianDifference(UIInterfaceOrientation from, UIInterfac
     UIInterfaceOrientation to = self.toOrientation;
 
     if (UIInterfaceOrientationIsPortrait(to)) {
-        scale.toValue = [NSValue valueWithCGRect:CGRectMake(0, 0, endFrame.size.width, endFrame.size.height)];
+        scale.toValue = [NSValue valueWithCGRect:CGRectMake(endFrame.origin.x, endFrame.origin.y, endFrame.size.width, endFrame.size.height)];
     } else {
-        scale.toValue = [NSValue valueWithCGRect:CGRectMake(0, 0, endFrame.size.height, endFrame.size.width)];
+        scale.toValue = [NSValue valueWithCGRect:CGRectMake(endFrame.origin.y, endFrame.origin.x, endFrame.size.height, endFrame.size.width)];
     }
 
     NSInteger factor = RadianDifference(from, to);
@@ -259,7 +266,6 @@ static inline NSInteger RadianDifference(UIInterfaceOrientation from, UIInterfac
 - (void) animationDidStart:(CAAnimation *)anim {
     if ([[anim valueForKey:@"type"] isEqual:@"expand"]) {
         self.liftedImageView.hidden = YES;
-
     }
 }
 
@@ -268,8 +274,6 @@ static inline NSInteger RadianDifference(UIInterfaceOrientation from, UIInterfac
         self.liftedImageView.hidden = NO;
         [self.imageView removeFromSuperview];
     } else if ([[anim valueForKey:@"type"] isEqual:@"expand"]) {
-        self.imageView.layer.position = CGPointMake(self.containerView.frame.origin.x + floorf(self.containerView.frame.size.width/2), self.containerView.frame.origin.y + floorf(self.containerView.frame.size.height/2));
-        self.imageView.layer.bounds = CGRectMake(0, 0, self.containerView.frame.size.width, self.containerView.frame.size.height);
         self.imageView.layer.transform = CATransform3DIdentity;
         [self.containerView addSubview:self.imageView];
     }
